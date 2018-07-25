@@ -8,6 +8,10 @@
 </head>
 <body>
     <div id="app">
+        <ul v-for="message in messages">
+            <li v-text="message"></li>
+
+        </ul>
         <form action="/chat" method="POST" v-on:submit.prevent="postMessage">
         <input type="text" name="message" v-model="message">
         <input type="submit" value="Send" >
@@ -16,19 +20,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.16/vue.js"></script>
     <script>
-    new Vue({
+        var client = new EventSource("http://localhost:3000/chat");
+    var vue = new Vue({
         el: "#app",
         data: {
-            message: ''
+            message: '',
+            messages: [],
         },
         methods: {
             postMessage() {
                 
                
-                axios.post("http://localhost:3000/get", this.message).then((response) => {
+                axios.post("http://localhost:3000/get", vue.message).then((response) => {
                
+               vue.message = '';
             });
         }
+        },
+        created: function () {
+            client.onmessage = function (msg) {
+                vue.messages.push(msg.data);
+ 
+            }
         }
     });
     </script>

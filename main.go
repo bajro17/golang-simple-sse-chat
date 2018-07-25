@@ -25,6 +25,7 @@ func init() {
 const patience time.Duration = time.Second * 1
 
 var msg = make(chan string)
+var broker = NewServer()
 
 // Example SSE server in Golang.
 //     $ go run sse.go
@@ -45,7 +46,7 @@ type Broker struct {
 }
 
 func main() {
-
+	go sendMessage(broker)
 	http.HandleFunc("/chat", chat)
 	http.HandleFunc("/get", getPost)
 	http.HandleFunc("/", index)
@@ -59,21 +60,11 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 func chat(w http.ResponseWriter, r *http.Request) {
 
-	broker := NewServer()
+	
 	flusher, ok := w.(http.Flusher)
 
-	fmt.Printf("test")
-	broker.Notifier <- []byte("test")
-	go func() {
-		for {
-
-			// Create a little message to send to clients,
-			// including the current time.
-			broker.Notifier <- []byte(<-msg)
-			time.Sleep(time.Second * 1)
-
-		}
-	}()
+	
+	
 	if !ok {
 		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
 		return
@@ -160,6 +151,14 @@ func listen(broker *Broker) {
 		}
 	}
 
+}
+func sendMessage(broker *Broker) {
+	for {
+
+		broker.Notifier <- []byte(<-msg)
+		
+
+	}
 }
 
 func getMessage(message string) {
